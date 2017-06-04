@@ -1,3 +1,9 @@
+#### reinforcement-learning
+
+This repository contains my solutions to the exercises from Denny Britz's [reinforcement-learning](https://github.com/dennybritz/reinforcement-learning). 
+
+The following lines are from the original README.
+
 ### Overview
 
 This repository provides code, exercises and solutions for popular Reinforcement Learning algorithms. These are meant to serve as a learning tool to complement the theoretical materials from
