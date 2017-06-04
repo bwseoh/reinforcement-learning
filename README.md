@@ -1,4 +1,4 @@
-#### reinforcement-learning
+# reinforcement-learning
 
 This repository contains my solutions to the exercises from Denny Britz's [reinforcement-learning](https://github.com/dennybritz/reinforcement-learning). 
 
