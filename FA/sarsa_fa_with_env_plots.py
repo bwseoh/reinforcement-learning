@@ -44,13 +44,17 @@ class Estimator():
     Value Function approximator. 
     """
     
-    def __init__(self):
+    def __init__(self, alpha=None):
         # We create a separate model for each action in the environment's
         # action space. Alternatively we could somehow encode the action
         # into the features, but this way it's easier to code up.
         self.models = []
         for _ in range(env.action_space.n):
-            model = SGDRegressor(learning_rate="constant")
+            if alpha is None:
+                model = SGDRegressor(learning_rate="constant")
+                print("No alpha value set")
+            else:
+                model = SGDRegressor(learning_rate="constant", eta0=alpha)
             # We need to call partial_fit once to initialize the model
             # or we get a NotFittedError when trying to make a prediction
             # This is quite hacky.
@@ -123,9 +127,9 @@ def make_epsilon_greedy_policy(estimator, epsilon, nA):
         return A
     return policy_fn
 
-def q_learning(env, estimator, num_episodes, discount_factor=1.0, epsilon=0.1, epsilon_decay=1.0):
+def sarsa_fa(env, estimator, num_episodes, discount_factor=1.0, epsilon=0.1, epsilon_decay=1.0):
     """
-    Q-Learning algorithm for off-policy TD control using Function Approximation.
+    SARSA algorithm for on-policy TD control using Function Approximation.
     Finds the optimal greedy policy while following an epsilon-greedy policy.
     
     Args:
@@ -207,7 +211,7 @@ def q_learning(env, estimator, num_episodes, discount_factor=1.0, epsilon=0.1, e
                         prev_observation,
                         action,
                         # Target
-                        reward + discount_factor * np.max(estimator.predict(observation))
+                        reward + discount_factor * estimator.predict(observation, next_action)
                     )
 
                     # We will do the next_action at the next iteration
@@ -220,7 +224,7 @@ def save_weights(estimator, n_episodes):
     # Let's save the learned weights as a file.
     current_time_string = datetime.datetime.strftime(datetime.datetime.utcnow(), "%Y-%m-%d-%H-%M-%S")
     for i, action_model in enumerate(estimator.models):
-        joblib.dump(action_model, current_time_string + '_q_learning_' + str(n_episodes) + 'action'+ str(i) + '.pkl')
+        joblib.dump(action_model, current_time_string + '_sarsa_' + str(n_episodes) + 'action'+ str(i) + '.pkl')
 
 def play_with_weights(estimator):
     np.random.seed()
@@ -262,14 +266,16 @@ def play_with_weights(estimator):
         continue
 
 if __name__ == "__main__":
-    estimator = Estimator()
+    # You can set the alpha value here and pass it to Estimator(). 
+    # Note that the default value set by SGDRegressor is 0.01.
+    estimator = Estimator(alpha=None)
 
     # Note: For the Mountain Car we don't actually need an epsilon > 0.0
     # because our initial estimate for all states is too "optimistic" which leads
     # to the exploration of all states.
     n_episodes = 1000
 
-    stats = q_learning(env, estimator, n_episodes, epsilon=0.0)
+    stats = sarsa_fa(env, estimator, n_episodes, epsilon=0.0)
 
     plotting.plot_cost_to_go_mountain_car(env, estimator)
     plotting.plot_episode_stats(stats, smoothing_window=25)
