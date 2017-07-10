@@ -1,14 +1,14 @@
 # coding: utf-8
+import sys
 import gym
 import itertools
 import matplotlib
 import numpy as np
-import sys
 import sklearn.pipeline
 import sklearn.preprocessing
 
 import datetime
-from sklearn.externals import joblib
+import pickle
 
 if "../" not in sys.path:
   sys.path.append("../") 
@@ -150,8 +150,8 @@ def sarsa_fa(env, estimator, num_episodes, discount_factor=1.0, epsilon=0.1, eps
         episode_rewards=np.zeros(num_episodes))    
     
     try:
+        np.random.seed(0)
         for i_episode in range(num_episodes):
-        
             # The policy we're following
             policy = make_epsilon_greedy_policy(
                 estimator, epsilon * epsilon_decay**i_episode, env.action_space.n
@@ -162,7 +162,7 @@ def sarsa_fa(env, estimator, num_episodes, discount_factor=1.0, epsilon=0.1, eps
             last_reward = stats.episode_rewards[i_episode - 1]
             print("\rEpisode {}/{} ({})".format(i_episode + 1, num_episodes, last_reward), end="")
             sys.stdout.flush()
-        
+
             # The very first state(== observation)
             observation = env.reset()
 
@@ -223,10 +223,11 @@ def sarsa_fa(env, estimator, num_episodes, discount_factor=1.0, epsilon=0.1, eps
 def save_weights(estimator, n_episodes):
     # Let's save the learned weights as a file.
     current_time_string = datetime.datetime.strftime(datetime.datetime.utcnow(), "%Y-%m-%d-%H-%M-%S")
-    for i, action_model in enumerate(estimator.models):
-        joblib.dump(action_model, current_time_string + '_sarsa_' + str(n_episodes) + 'action'+ str(i) + '.pkl')
+    file_name = current_time_string + '_sarsa_' + str(n_episodes) + '.pkl'
+    pickle.dump(estimator, open(file_name, 'wb'))
 
 def play_with_weights(estimator):
+    # Re-seed so that we can see a fresh set of steps
     np.random.seed()
 
     nA = env.action_space.n
@@ -239,7 +240,6 @@ def play_with_weights(estimator):
     n_iteration = 0
 
     plt.figure()
-
     plt.imshow(env.render(mode='rgb_array'))
 
     while not done:
@@ -268,18 +268,17 @@ def play_with_weights(estimator):
 if __name__ == "__main__":
     # You can set the alpha value here and pass it to Estimator(). 
     # Note that the default value set by SGDRegressor is 0.01.
-    estimator = Estimator(alpha=None)
+    estimator_train = Estimator(alpha=None)
 
     # Note: For the Mountain Car we don't actually need an epsilon > 0.0
     # because our initial estimate for all states is too "optimistic" which leads
     # to the exploration of all states.
-    n_episodes = 1000
+    n_episodes = 100
+    stats = sarsa_fa(env, estimator_train, n_episodes, epsilon=0.0)
 
-    stats = sarsa_fa(env, estimator, n_episodes, epsilon=0.0)
+    save_weights(estimator_train, n_episodes)
 
-    plotting.plot_cost_to_go_mountain_car(env, estimator)
+    plotting.plot_cost_to_go_mountain_car(env, estimator_train)
     plotting.plot_episode_stats(stats, smoothing_window=25)
 
-    save_weights(estimator, n_episodes)
-
-    play_with_weights(estimator)
+    play_with_weights(estimator_train)

@@ -147,7 +147,6 @@ def q_learning(env, estimator, num_episodes, discount_factor=1.0, epsilon=0.1, e
     
     try:
         for i_episode in range(num_episodes):
-        
             # The policy we're following
             policy = make_epsilon_greedy_policy(
                 estimator, epsilon * epsilon_decay**i_episode, env.action_space.n
@@ -268,12 +267,11 @@ if __name__ == "__main__":
     # because our initial estimate for all states is too "optimistic" which leads
     # to the exploration of all states.
     n_episodes = 1000
-
     stats = q_learning(env, estimator, n_episodes, epsilon=0.0)
+
+    save_weights(estimator, n_episodes)
 
     plotting.plot_cost_to_go_mountain_car(env, estimator)
     plotting.plot_episode_stats(stats, smoothing_window=25)
-
-    save_weights(estimator, n_episodes)
 
     play_with_weights(estimator)
