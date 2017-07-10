@@ -150,7 +150,6 @@ def sarsa_fa(env, estimator, num_episodes, discount_factor=1.0, epsilon=0.1, eps
         episode_rewards=np.zeros(num_episodes))    
     
     try:
-        np.random.seed(0)
         for i_episode in range(num_episodes):
             # The policy we're following
             policy = make_epsilon_greedy_policy(
@@ -243,6 +242,8 @@ def play_with_weights(estimator):
     plt.imshow(env.render(mode='rgb_array'))
 
     while not done:
+        print()
+        print("Now at " + str(observation))
         action = np.random.choice(env.action_space.n, p=opt_policy(observation))
 
         if action == 0:
