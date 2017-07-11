@@ -168,6 +168,12 @@ def sarsa_fa(env, estimator, num_episodes, discount_factor=1.0, epsilon=0.1, eps
             # Select the first action given the first state
             action = np.random.choice(env.action_space.n, p=policy(observation))
 
+            # Uncomment the following lines to see how the training episodes progress like
+            #print()
+            #print("Episode " + str(i_episode))
+            #plt.figure()
+            #plt.imshow(env.render(mode='rgb_array'))
+
             # We are naively assuming finite lengths of episodes here.
             # Using while loop like this might lead to infinite loop
             # depending on environments. Adding measures to enforce
@@ -185,6 +191,12 @@ def sarsa_fa(env, estimator, num_episodes, discount_factor=1.0, epsilon=0.1, eps
                 # Record the result of the action
                 observation, reward, done, _ = env.step(action)
 
+                # Uncomment the following lines to see how the training episodes progress like
+                #print("Current State: " + str(prev_observation))
+                #print("Q-Values: "+ str(estimator.predict(prev_observation)))
+                #print("Action: " + str(action))
+                #plt.imshow(env.render(mode='rgb_array'))
+
                 # Update the total reward obtained from this episode (for stats purposes)
                 stats.episode_rewards[i_episode] += reward
             
@@ -196,6 +208,9 @@ def sarsa_fa(env, estimator, num_episodes, discount_factor=1.0, epsilon=0.1, eps
                     # In the value table lookup version, we updated using the following statement:
                     # Q[prev_observation][action] += alpha * (reward - Q[prev_observation][action])
                     estimator.update(prev_observation, action, reward)
+
+                    # Uncomment the following lines to see how the training episodes progress like
+                    #plt.close()
                 
                 else:
                     # Select next action in advance to do the lookahead
@@ -216,6 +231,8 @@ def sarsa_fa(env, estimator, num_episodes, discount_factor=1.0, epsilon=0.1, eps
                     # We will do the next_action at the next iteration
                     action = next_action
     except KeyboardInterrupt:
+        # Uncomment the following lines to see how the training episodes progress like
+        # plt.close()
         return stats
     return stats
 
